@@ -1,0 +1,5 @@
+/home/javastral/GIT/Estructuras-Computacionales/Projects/HAL/Plantilla-final/CMakeFiles/Plantilla-final.dir
+/home/javastral/GIT/Estructuras-Computacionales/Projects/HAL/Plantilla-final/CMakeFiles/edit_cache.dir
+/home/javastral/GIT/Estructuras-Computacionales/Projects/HAL/Plantilla-final/CMakeFiles/rebuild_cache.dir
+/home/javastral/GIT/Estructuras-Computacionales/Projects/HAL/Plantilla-final/cmake/stm32cubemx/CMakeFiles/edit_cache.dir
+/home/javastral/GIT/Estructuras-Computacionales/Projects/HAL/Plantilla-final/cmake/stm32cubemx/CMakeFiles/rebuild_cache.dir

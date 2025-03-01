@@ -31,7 +31,17 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <_ansi.h>
 
+#include "keypad.h"
+#include "ring_buffer.h"
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -60,15 +70,12 @@ void Error_Handler(void);
 #define B1_Pin GPIO_PIN_13
 #define B1_GPIO_Port GPIOC
 #define B1_EXTI_IRQn EXTI15_10_IRQn
-#define RING_Pin GPIO_PIN_0
-#define RING_GPIO_Port GPIOA
-#define RING_EXTI_IRQn EXTI0_IRQn
-#define USART_TX_Pin GPIO_PIN_2
-#define USART_TX_GPIO_Port GPIOA
-#define USART_RX_Pin GPIO_PIN_3
-#define USART_RX_GPIO_Port GPIOA
-#define DOOR_Pin GPIO_PIN_4
-#define DOOR_GPIO_Port GPIOA
+#define USART2_TX_Pin GPIO_PIN_2
+#define USART2_TX_GPIO_Port GPIOA
+#define USART2_RX_Pin GPIO_PIN_3
+#define USART2_RX_GPIO_Port GPIOA
+#define DOOR_STATUS_Pin GPIO_PIN_4
+#define DOOR_STATUS_GPIO_Port GPIOA
 #define LD2_Pin GPIO_PIN_5
 #define LD2_GPIO_Port GPIOA
 #define COLUMN_1_Pin GPIO_PIN_10
@@ -97,6 +104,11 @@ void Error_Handler(void);
 #define ROW_3_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+#define BUFFER_CAPACITY 32
+#define KEYPAD_BUFFER_SIZE 10
+#define FW_VERSION "1.0.0"
+#define PASSWORD "2806"
+
 
 /* USER CODE END Private defines */
 

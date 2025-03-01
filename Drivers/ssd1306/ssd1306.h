@@ -8,9 +8,7 @@
 #ifndef __SSD1306_H__
 #define __SSD1306_H__
 
-#include <stddef.h>
-#include <stdint.h>
-#include <_ansi.h>
+#include "main.h"
 
 _BEGIN_STD_C
 

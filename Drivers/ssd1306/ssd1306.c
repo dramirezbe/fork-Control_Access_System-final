@@ -268,6 +268,7 @@ char ssd1306_WriteString(char* str, SSD1306_Font_t Font, SSD1306_COLOR color) {
     return *str;
 }
 
+
 /* Position the cursor */
 void ssd1306_SetCursor(uint8_t x, uint8_t y) {
     SSD1306.CurrentX = x;

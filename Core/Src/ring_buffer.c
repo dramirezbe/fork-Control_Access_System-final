@@ -1,113 +1,111 @@
-
-#include "ring_buffer.h"
-
-
-void ring_buffer_init(ring_buffer_t *rb, uint8_t *mem_add, uint8_t cap)
-{
-	rb->buffer = mem_add;
-	rb->capacity = cap;
-
-	ring_buffer_reset(rb);
-}
-
-/*
- * @brief Esta funcion reinicia los datos disponibles en el buffer
- *
- * @retval size: cantidad de datos disponibles
- */
-void ring_buffer_reset(ring_buffer_t *rb)
-{
-	rb->head = 0;
-	rb->tail = 0;
-	rb->is_full = 0;
-}
-
-/*
- * @brief Esta funcion calcula los datos disponibles en el buffer
- *
- * @retval size: cantidad de datos disponibles
- */
-uint8_t ring_buffer_size(ring_buffer_t *rb)
-{
-	uint8_t size = 0;
-	if (rb->head >= rb->tail) {
-		size = rb->head - rb->tail;
-	} else if (rb->is_full == 0) {
-		size = (rb->capacity - rb->tail) + rb->head;
-	} else {
-		size = rb->capacity;
-	}
-	return size;
-}
-
-/*
- * @brief Esta funcion revisa si el buffer esta lleno
- *
- * @retval is_full: 0 si no esta lleno, 1 si esta lleno
- */
-uint8_t ring_buffer_is_full(ring_buffer_t *rb)
-{
-	return rb->is_full;
-}
-
-/*
- * @brief Esta funcion revisa si el buffer esta vacio
- *
- * @retval 0 si esta vacio, 1 si no esta vacio
- */
-uint8_t ring_buffer_is_empty(ring_buffer_t *rb)
-{
-	return ((rb->head == rb->tail) && (rb->is_full == 0)) ? 1 : 0;
-}
-
 /**
- * @brief Esta funcion escribe un dato en el buffer circular
- *
- * @param data: el dato que se va a escribir
- *
- * @retval Ninguno
+ * @file ring_buffer.c
+ * @brief Circular buffer (ring buffer) implementation with overwrite capability
+ * @author dramirezbe
+ * @date Feb 11, 2025
+ * 
+ * This implementation overwrites the oldest data when writing to a full buffer.
+ * Suitable for embedded systems using STM32 HAL.
  */
-void ring_buffer_write(ring_buffer_t *rb, uint8_t data)
-{
-	rb->buffer[rb->head] = data;
-	rb->head = rb->head + 1;
 
-	if (rb->head >= rb->capacity) { // si la cabeza llega al final de la memoria
-		rb->head = 0;
-	}
-
-	if (rb->is_full != 0) { // si se pierden datos viejos
-		rb->tail = rb->tail + 1;
-	}
-
-	if (rb->tail >= rb->capacity) { // si la cola llega al final de la memoria
-		rb->tail = 0;
-	}
-
-	if (rb->head == rb->tail) { // si la cabeza alcanza la cola
-		rb->is_full = 1;
-	}
-}
-
-/**
- * @brief Esta funcion lee un dato del buffer circular
- *
- * @param data: la direccion de donde se va a escribir el dato
- *
- * @retval 1: hay datos disponibles, 0: no hay datos
- */
-uint8_t ring_buffer_read(ring_buffer_t *rb, uint8_t *data) // 0x20
-{
-	if ((rb->is_full != 0) || (rb->head != rb->tail)) { // data available
-		*data = rb->buffer[rb->tail]; // add: 0x20, val: buffer
-		rb->tail = rb->tail + 1;
-		if (rb->tail >= rb->capacity) {
-			rb->tail = 0;
-		}
-		rb->is_full = 0;
-
-		return 1; // buffer con datos
-	}
-	return 0; // buffer vacio
-}
-
+ #include "ring_buffer.h"
+ #include <stdint.h>
+ 
+ /**
+  * @brief Initialize ring buffer structure
+  * @param rb        Pointer to ring buffer instance
+  * @param mem_add   Memory address for buffer storage
+  * @param capacity  Maximum number of elements the buffer can hold
+  */
+ void ring_buffer_init(ring_buffer_t *rb, uint8_t *mem_add, uint8_t capacity) {
+     rb->buffer   = mem_add;
+     rb->capacity = capacity;
+     rb->head     = 0;
+     rb->tail     = 0;
+     rb->is_full  = 0;
+ }
+ 
+ /**
+  * @brief Reset buffer to empty state
+  * @param rb Pointer to ring buffer instance
+  */
+ void ring_buffer_reset(ring_buffer_t *rb) {
+     rb->head    = 0;
+     rb->tail    = 0;
+     rb->is_full = 0;
+ }
+ 
+ /**
+  * @brief Calculate current number of elements in buffer
+  * @param rb Pointer to ring buffer instance
+  * @return Number of elements stored in buffer
+  */
+ uint8_t ring_buffer_size(ring_buffer_t *rb) {
+     if (rb->is_full) {
+         return rb->capacity;
+     }
+     
+     return (rb->head >= rb->tail) ? (rb->head - rb->tail) 
+                                  : (rb->capacity - rb->tail + rb->head);
+ }
+ 
+ /**
+  * @brief Check if buffer is full
+  * @param rb Pointer to ring buffer instance
+  * @return 1 if full, 0 otherwise
+  */
+ uint8_t ring_buffer_is_full(ring_buffer_t *rb) {
+     return rb->is_full;
+ }
+ 
+ /**
+  * @brief Check if buffer is empty
+  * @param rb Pointer to ring buffer instance
+  * @return 1 if empty, 0 otherwise
+  */
+ uint8_t ring_buffer_is_empty(ring_buffer_t *rb) {
+     return (!rb->is_full && (rb->head == rb->tail));
+ }
+ 
+ /**
+  * @brief Write data to buffer (overwrites oldest data if full)
+  * @param rb    Pointer to ring buffer instance
+  * @param data  Byte to write to buffer
+  * 
+  * @note When buffer is full, writing new data will:
+  *       1. Overwrite the oldest data
+  *       2. Advance both head and tail pointers
+  *       3. Maintain full state
+  */
+ void ring_buffer_write(ring_buffer_t *rb, uint8_t data) {
+     rb->buffer[rb->head] = data;
+     rb->head = (rb->head + 1) % rb->capacity;
+ 
+     if (rb->is_full) {
+         rb->tail = (rb->tail + 1) % rb->capacity;
+     }
+ 
+     rb->is_full = (rb->head == rb->tail);
+ }
+ 
+ /**
+  * @brief Read data from buffer
+  * @param rb    Pointer to ring buffer instance
+  * @param byte  Pointer to store read byte
+  * @return 1 if read successful, 0 if buffer empty
+  * 
+  * @note Reading from buffer will:
+  *       1. Clear full status if buffer was full
+  *       2. Advance tail pointer
+  *       3. Preserve data until overwritten
+  */
+ uint8_t ring_buffer_read(ring_buffer_t *rb, uint8_t *byte) {
+     if (ring_buffer_is_empty(rb)) {
+         return 0;
+     }
+ 
+     *byte = rb->buffer[rb->tail];
+     rb->tail = (rb->tail + 1) % rb->capacity;
+     rb->is_full = 0;
+     return 1;
+ }
