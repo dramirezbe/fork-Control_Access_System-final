@@ -6,6 +6,8 @@ extern "C" {
 #endif
 
 #include "main.h"
+#include "ring_buffer.h"
+
 
 // Definiciones para el sistema
 

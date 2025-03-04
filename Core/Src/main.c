@@ -22,8 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
-
+#include "keypad.h"
+#include "ssd1306.h"
+#include "ssd1306_fonts.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,6 +51,7 @@ UART_HandleTypeDef huart3;
 /* USER CODE BEGIN PV */
 uint16_t keypad_colum_pressed = 0;
 uint8_t b1_press_count = 0;
+uint32_t button_last_press = 0;    // Tiempo de la última pulsación
 
 uint8_t pc_rx_data[BUFFER_CAPACITY];
 ring_buffer_t pc_rx_buffer;
@@ -63,6 +65,7 @@ ring_buffer_t internet_rx_buffer;
 
 door_state_t door_state = STATE_CERRADO;
 uint32_t door_timer = 0;  // Para contar el tiempo en modo temporal
+
 
 
 char key_buffer[KEYPAD_BUFFER_SIZE] = {0};
@@ -85,21 +88,25 @@ static void MX_USART3_UART_Init(void);
 
 
 
-
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-  if (GPIO_Pin == B1_Pin) { // Button
-    // capture event for door state machine
-    static uint32_t last_button_press = 0;
-    if (HAL_GetTick() - last_button_press < 100) {
+  if (GPIO_Pin == B1_Pin) { // Botón
+    uint32_t current_time = HAL_GetTick();
+
+    // Debounce: ignora presiones si han pasado menos de 100 ms desde la última
+    if (current_time - button_last_press < 100) {
       return;
     }
-    last_button_press = HAL_GetTick();
+
+    // Actualiza el tiempo de la última pulsación y cuenta la pulsación
+    button_last_press = current_time;
     b1_press_count++;
-  } else { // Keypad
+    
+  } else { // Teclado matricial
     keypad_colum_pressed = GPIO_Pin;
   }
 }
+
 
 /**
 * @brief Callback de interrupción de recepción UART.
@@ -167,8 +174,8 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Transmit(&huart2, (uint8_t *)"Hello, stm32\r\n", 14, HAL_MAX_DELAY);
-  HAL_UART_Transmit(&huart3, (uint8_t *)"Hello, esp-wifi\r\n", 17, HAL_MAX_DELAY);
+  HAL_UART_Transmit(&huart2, (uint8_t *)"Hello, stm32\r\n", 14, 1000);
+  HAL_UART_Transmit(&huart3, (uint8_t *)"Hello, esp-wifi\r\n", 17, 1000);
   HAL_UART_Receive_IT(&huart3, &rx_data, 1);
   HAL_UART_Receive_IT(&huart2, &rx_data, 1);
   
@@ -191,15 +198,10 @@ int main(void)
   {
     heartbeat();
 
-    if (b1_press_count > 0) {
-
-      ssd1306_Fill(Black);
-      ssd1306_SetCursor(17, 17);
-      ssd1306_WriteString("B1", Font_11x18, White);
-      ssd1306_UpdateScreen();
-
+      // Procesa el evento del botón solo si han pasado al menos 500 ms desde la última pulsación
+    if (b1_press_count > 0 && (HAL_GetTick() - button_last_press >= 500)) {
       system_events_handler_button(b1_press_count);
-      b1_press_count = 0;
+      b1_press_count = 0;  // Reinicia el contador después de procesar el evento
     }
     if (keypad_colum_pressed > 0) {
       uint8_t key = keypad_scan(keypad_colum_pressed);

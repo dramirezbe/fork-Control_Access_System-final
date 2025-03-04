@@ -1,4 +1,4 @@
-# Install script for directory: /home/javastral/GIT/Estructuras-Computacionales/Projects/HAL/Plantilla-final/cmake/stm32cubemx
+# Install script for directory: /home/javastral/GIT/fork-Control_Access_System-final/cmake/stm32cubemx
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

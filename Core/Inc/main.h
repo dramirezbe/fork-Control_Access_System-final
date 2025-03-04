@@ -38,10 +38,7 @@ extern "C" {
 #include <stddef.h>
 #include <_ansi.h>
 
-#include "keypad.h"
-#include "ring_buffer.h"
-#include "ssd1306.h"
-#include "ssd1306_fonts.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
